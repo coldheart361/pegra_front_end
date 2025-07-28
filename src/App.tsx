@@ -1,15 +1,15 @@
 // App.tsx
-import { useState } from "react"
-import { Navbar } from "./components/Navbar"
-import { LoginDialog } from "./components/LoginDialog"
-import { Button } from "@/components/ui/button"
+import { useState } from "react";
+import { Navbar } from "./components/Navbar";
+import { LoginDialog } from "./components/LoginDialog";
+import { Button } from "@/components/ui/button";
 
 function App() {
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleLogin = () => {
-    setIsDialogOpen(false)
-  }
+    setIsDialogOpen(false);
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -24,7 +24,7 @@ function App() {
         <Button className="px-8 py-4 text-lg">Get Started</Button>
       </main>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

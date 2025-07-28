@@ -52,7 +52,7 @@ export function Navbar({ onLoginClick }: NavbarProps) {
             </NavigationMenuItem>
             <NavigationMenuItem>
               <NavigationMenuLink
-                href="#"
+                href="/my-assets/"
                 className="text-gray-700 hover:text-blue-600"
               >
                 My Assets
