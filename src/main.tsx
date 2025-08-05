@@ -7,6 +7,7 @@ import Register from "./pages/Register";
 import "./index.css";
 import Account from "./pages/Account";
 import MyAssets from "./pages/MyAssets";
+import TopAssets from "./pages/TopAssets";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -16,6 +17,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <Route path="/register" element={<Register />} />
         <Route path="/account" element={<Account />} />
         <Route path="/my-assets" element={<MyAssets />} />
+        <Route path="/buy" element={<TopAssets />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

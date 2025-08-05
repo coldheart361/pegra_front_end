@@ -4,55 +4,49 @@ import { Navbar } from "@/components/Navbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LogOut, User, Mail, UserCircle, Wallet } from "lucide-react";
-import { useSyncProviders } from "@/hooks/useSyncProviders";
-import { formatAddress } from "@/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import axios from "axios";
-
-const baseUrlAPI = `http://localhost:18080`;
 
 interface User {
   name: string;
   username: string;
   email: string;
+  wallet_address: string;
 }
 
-interface ProviderInfo {
-  uuid: string;
-  name: string;
-  icon: string;
-}
-
-interface EIP6963ProviderDetail {
-  info: {
-    uuid: string;
-    name: string;
-    icon: string;
-  };
-  provider: any;
-}
+const baseUrlAPI = "http://localhost:18080";
 
 export default function Account() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User>();
   const [loading, setLoading] = useState(true);
-  const [selectedWallet, setSelectedWallet] =
-    useState<ProviderInfo | null>(null);
   const [userAccount, setUserAccount] = useState<string>("");
+  const [showDialog, setShowDialog] = useState(false);
+  const [inputAddress, setInputAddress] = useState("");
+
   const navigate = useNavigate();
-  const providers = useSyncProviders();
 
   useEffect(() => {
-    const user = localStorage.getItem("user");
-    if (!user) {
+    const userStr = localStorage.getItem("user");
+    if (!userStr) {
       console.log("No login information found. Please login first");
       navigate("/");
       return;
     }
-    const user_json = JSON.parse(user);
-    setUser(user_json);
-    if (user_json.metamask_account != "") {
-      setUserAccount(user_json.metamask_account);
-      setSelectedWallet(user_json.wallet_provider);
+
+    const userJson = JSON.parse(userStr);
+    setUser(userJson);
+
+    if (userJson.wallet_address) {
+      setUserAccount(userJson.wallet_address);
     }
+
     setLoading(false);
   }, [navigate]);
 
@@ -61,39 +55,44 @@ export default function Account() {
     navigate("/");
   };
 
-  const handleConnect = async (providerWithInfo: EIP6963ProviderDetail) => {
+  const handleSaveWallet = async () => {
+    const address = inputAddress.trim();
     try {
-      const accounts: string[] | undefined =
-        await providerWithInfo.provider.request({
-          method: "eth_requestAccounts",
-        });
-      if (accounts?.[0]) {
-        setSelectedWallet(providerWithInfo.info);
-        setUserAccount(accounts[0]);
-        console.log(providerWithInfo.info);
-        const token_string = localStorage.getItem("token") as string;
-        const token = JSON.parse(token_string);
-        await axios.post(
-          `${baseUrlAPI}/user/update_metamask_account`,
-          {
-            metamask_account: accounts[0],
-            wallet_provider: providerWithInfo.info,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        const user = await axios.get(`${baseUrlAPI}/user/me`, {
+      if (!user) {
+        alert("No login information found");
+        return;
+      }
+
+      const login_token = localStorage.getItem("token") as string;
+      const token = JSON.parse(login_token);
+      console.log(token);
+
+      await axios.post(
+        `${baseUrlAPI}/user/update_wallet`,
+        {
+          wallet_address: address,
+        },
+        {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        });
-        localStorage.setItem("user", JSON.stringify(user.data));
-      }
+        }
+      );
+
+      const res = await axios.get(`${baseUrlAPI}/user/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      localStorage.setItem("user", JSON.stringify(res.data));
+
+      console.log(res.data);
+      setUser(res.data);
+      setUserAccount(address);
+      setShowDialog(false);
     } catch (err) {
-      console.error("Wallet connection failed:", err);
+      console.error("Failed to save wallet:", err);
+      alert("Error saving wallet address");
     }
   };
 
@@ -138,52 +137,49 @@ export default function Account() {
               <div className="flex items-center gap-2 mb-2">
                 <Wallet className="text-blue-600 w-5 h-5" />
                 <span className="text-lg font-semibold text-gray-800">
-                  Connect to MetaMask
+                  Connect to Your Wallet
                 </span>
               </div>
 
-              {/* Show wallet connection status or buttons */}
-              {userAccount && selectedWallet ? (
-                <div className="flex items-center gap-4 border rounded-md bg-gray-50 p-4 shadow-sm">
-                  <img
-                    src={selectedWallet.icon}
-                    alt={selectedWallet.name}
-                    className="w-6 h-6"
-                  />
-                  <span className="text-gray-800 font-medium">
-                    {selectedWallet.name}
-                  </span>
-                  <span className="text-sm text-gray-500">
-                    {formatAddress(userAccount)}
-                  </span>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-                  {providers.length > 0 ? (
-                    providers.map((provider: EIP6963ProviderDetail) => (
-                      <Button
-                        key={provider.info.uuid}
-                        variant="outline"
-                        onClick={() => handleConnect(provider)}
-                        className="flex items-center gap-3 p-4 rounded-md border border-gray-300 hover:bg-gray-100 transition"
-                      >
-                        <img
-                          src={provider.info.icon}
-                          alt={provider.info.name}
-                          className="w-6 h-6"
-                        />
-                        <span className="text-gray-800 font-medium">
-                          Connect {provider.info.name}
-                        </span>
+              <Dialog open={showDialog} onOpenChange={setShowDialog}>
+                {userAccount ? (
+                  <div className="flex flex-col gap-3 border rounded-md bg-gray-50 p-4 shadow-sm">
+                    <div className="flex items-center gap-4">
+                      <span className="text-gray-800 font-medium">
+                        Wallet Address
+                      </span>
+                      <span className="text-sm text-gray-500">
+                        {userAccount}
+                      </span>
+                    </div>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="w-fit">
+                        Update Wallet Address
                       </Button>
-                    ))
-                  ) : (
-                    <p className="text-gray-600 col-span-full">
-                      No wallet providers detected.
-                    </p>
-                  )}
-                </div>
-              )}
+                    </DialogTrigger>
+                  </div>
+                ) : (
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="mt-2">
+                      Enter Wallet Address
+                    </Button>
+                  </DialogTrigger>
+                )}
+
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Enter Wallet Address</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <Input
+                      placeholder="0x..."
+                      value={inputAddress}
+                      onChange={(e) => setInputAddress(e.target.value)}
+                    />
+                    <Button onClick={handleSaveWallet}>Save Address</Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </CardContent>
         </Card>

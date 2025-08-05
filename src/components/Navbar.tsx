@@ -36,18 +36,10 @@ export function Navbar({ onLoginClick }: NavbarProps) {
             </NavigationMenuItem>
             <NavigationMenuItem>
               <NavigationMenuLink
-                href="#"
+                href="/buy"
                 className="text-gray-700 hover:text-blue-600"
               >
-                Buy
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink
-                href="#"
-                className="text-gray-700 hover:text-blue-600"
-              >
-                Sell
+                Trade
               </NavigationMenuLink>
             </NavigationMenuItem>
             <NavigationMenuItem>
