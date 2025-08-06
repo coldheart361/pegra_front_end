@@ -36,7 +36,7 @@ export function Navbar({ onLoginClick }: NavbarProps) {
             </NavigationMenuItem>
             <NavigationMenuItem>
               <NavigationMenuLink
-                href="/buy"
+                href="/trade"
                 className="text-gray-700 hover:text-blue-600"
               >
                 Trade
@@ -44,7 +44,7 @@ export function Navbar({ onLoginClick }: NavbarProps) {
             </NavigationMenuItem>
             <NavigationMenuItem>
               <NavigationMenuLink
-                href="/my-assets/"
+                href="/assets/"
                 className="text-gray-700 hover:text-blue-600"
               >
                 My Assets

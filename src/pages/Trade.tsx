@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { ethers, Contract, ContractFactory } from "ethers";
+import { ethers, ContractFactory } from "ethers";
 import { Navbar } from "@/components/Navbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoginDialog } from "@/components/LoginDialog";
 import exchangeABI from "@/contracts/MultiTokenExchange.json";
 import fakeTokenArtifact from "@/contracts/FakeToken.json";
+import { BuySellDialog } from "@/components/BuySellDialog";
 
-const EXCHANGE_ADDRESS = "0x5FeaeBfB4439F3516c74939A9D04e95AFE82C4ae";
+const EXCHANGE_ADDRESS = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
 const RPC_URL = "http://127.0.0.1:8545";
 
 interface CryptoAsset {
@@ -40,6 +41,11 @@ export default function TopAssets() {
     return new ethers.Wallet(privateKey, provider);
   }, [privateKey, provider]);
 
+  const contract = useMemo(() => {
+    if (!wallet) return null;
+    return new ethers.Contract(EXCHANGE_ADDRESS, exchangeABI.abi, wallet);
+  }, [wallet]);
+
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
@@ -57,22 +63,16 @@ export default function TopAssets() {
   useEffect(() => {
     const fetchAndCheckAssets = async (): Promise<void> => {
       if (!wallet) return;
+      if (!contract) return;
 
       try {
-        // 1. Fetch top 30 coins from CoinGecko
+        // Fetch top 30 coins from CoinGecko
         const res = await fetch(
           "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=30&page=1&sparkline=false"
         );
         const data: CryptoAsset[] = await res.json();
 
-        // 2. Contract instance
-        const contract: Contract = new ethers.Contract(
-          EXCHANGE_ADDRESS,
-          exchangeABI.abi,
-          wallet
-        );
-
-        // 3. Get supported tokens from exchange
+        // Get supported tokens from exchange
         const supportedTokens: SupportedTokens =
           await contract.getSupportedTokens();
 
@@ -167,7 +167,7 @@ export default function TopAssets() {
 
     if (wallet) {
       fetchAndCheckAssets();
-      const interval = setInterval(fetchAndCheckAssets, 3600_000);
+      const interval = setInterval(fetchAndCheckAssets, 900_000);
       return () => clearInterval(interval);
     }
   }, [wallet]);
@@ -271,6 +271,28 @@ export default function TopAssets() {
                 >
                   {asset.price_change_percentage_24h.toFixed(2)}% in 24 hours
                 </p>
+                <div className="mt-4 flex gap-2">
+                  {contract && asset.tokenAddress && (
+                    <>
+                      <BuySellDialog
+                        type="buy"
+                        assetName={asset.name}
+                        assetSymbol={asset.symbol}
+                        assetPrice={asset.current_price}
+                        tokenAddress={asset.tokenAddress}
+                        exchange={contract}
+                      />
+                      <BuySellDialog
+                        type="sell"
+                        assetName={asset.name}
+                        assetSymbol={asset.symbol}
+                        assetPrice={asset.current_price}
+                        tokenAddress={asset.tokenAddress}
+                        exchange={contract}
+                      />
+                    </>
+                  )}
+                </div>
               </CardContent>
             </Card>
           ))}

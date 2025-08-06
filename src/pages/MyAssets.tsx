@@ -7,8 +7,8 @@ import exchangeABI from "@/contracts/MultiTokenExchange.json";
 import tokenABI from "@/contracts/FakeToken.json";
 import { LoginDialog } from "@/components/LoginDialog";
 
-const EXCHANGE_ADDRESS = "0x5FeaeBfB4439F3516c74939A9D04e95AFE82C4ae";
-const FUSD_ADDRESS = "0xCA8c8688914e0F7096c920146cd0Ad85cD7Ae8b9";
+const EXCHANGE_ADDRESS = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
+const FUSD_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 const RPC_URL = "http://127.0.0.1:8545";
 
 interface Asset {
